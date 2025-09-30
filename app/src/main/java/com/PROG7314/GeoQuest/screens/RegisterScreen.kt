@@ -2,6 +2,7 @@ package com.PROG7314.GeoQuest.screens
 
 import android.graphics.Color
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,10 +37,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.PROG7314.GeoQuest.R
+import com.PROG7314.GeoQuest.ui.theme.PROG7314Theme
+
+@Preview(showBackground = true)
+@Composable
+fun RegisterScreenPreview() {
+    RegisterScreen(rememberNavController())
+}
 
 @Composable
-fun RegisterScreen() {
+fun RegisterScreen(navController: NavController) {
+
     var name by rememberSaveable { mutableStateOf("") }
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -173,13 +184,15 @@ fun RegisterScreen() {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 "Login Now",
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier.fillMaxHeight()
+                    .clickable{
+                        navController.navigate("login")
+                    },
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Light,
                 fontSize = 3.em
-                onClick = { /* Navigate to Login Screen */ }
             )
         }
 
@@ -188,8 +201,3 @@ fun RegisterScreen() {
 
 }
 
-@Preview(showBackground = true)
-@Composable
-fun RegisterScreenPreview() {
-    RegisterScreen()
-}

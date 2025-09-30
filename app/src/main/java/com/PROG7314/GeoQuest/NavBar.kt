@@ -13,6 +13,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.PROG7314.GeoQuest.screens.LoginScreen
+import com.PROG7314.GeoQuest.screens.RegisterScreen
 
 @Composable
 fun AppNavigation() {
@@ -43,12 +45,21 @@ fun AppNavigation() {
         }) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = Screen.Register.route,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Logbook.route) { LogbookScreen() }
             composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Settings.route) { SettingsScreen() }
+            composable(Screen.Login.route) {
+                LoginScreen(
+                    onLoginClick = {},
+                    onGoogleSignInClick = {},
+                    onRegisterClick = {},
+                    onForgotPasswordClick = {}
+                )
+            }
+            composable(Screen.Register.route) { RegisterScreen(navController) }
         }
     }
 }
