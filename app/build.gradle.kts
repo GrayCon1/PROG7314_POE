@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.PROG7314.GeoQuest"
+    namespace = "com.prog7314.geoquest"
     compileSdk = 36
 
     defaultConfig {
