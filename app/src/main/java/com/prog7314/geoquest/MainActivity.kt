@@ -11,6 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import com.prog7314.geoquest.screens.LoginScreen
 import com.prog7314.geoquest.screens.NavigationScreen
 import com.prog7314.geoquest.screens.RegisterScreen
+import com.prog7314.geoquest.screens.OfflineMapScreen
+import com.prog7314.geoquest.screens.IssueListScreen
 import com.prog7314.geoquest.screens.Screen
 import com.prog7314.geoquest.ui.theme.PROG7314Theme
 
@@ -18,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             PROG7314Theme {
                 Main()
@@ -27,17 +30,27 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Main(){
+fun Main() {
     val navController = rememberNavController()
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Register.route,
+        startDestination = Screen.Register.route
     ) {
         composable(Screen.Login.route) {
-            LoginScreen(
-                navController
-            )
+            LoginScreen(navController)
         }
-        composable(Screen.Register.route) { RegisterScreen(navController) }
-        composable (Screen.NavigationScreen.route) { NavigationScreen() } }
+        composable(Screen.Register.route) {
+            RegisterScreen(navController)
+        }
+        composable(Screen.NavigationScreen.route) {
+            NavigationScreen()
+        }
+        composable(Screen.OfflineMap.route) {
+            OfflineMapScreen()
+        }
+        composable(Screen.Issues.route) {
+            IssueListScreen()
+        }
     }
+}

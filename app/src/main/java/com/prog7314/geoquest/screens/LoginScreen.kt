@@ -19,12 +19,14 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -65,15 +67,17 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFB0B0B0)), // grey background
+            .background(Color(0xFFE8F4F8)), // grey background
         contentAlignment = Alignment.Center
     ) {
         Card(
-            shape = RoundedCornerShape(32.dp),
-            border = BorderStroke(3.dp, Color(0xFF64B5F6)), // blue border
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .fillMaxHeight(0.95f)
+                .fillMaxWidth()
+                .padding(24.dp)
+                .align(Alignment.Center),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -86,33 +90,44 @@ fun LoginScreen(
                     text = "Welcome to",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
+                    color = Color(0xFF2C3E50)
                 )
                 Text(
                     text = "GeoQuest",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
+                    color = Color(0xFF2C3E50)
                 )
                 Spacer(modifier = Modifier.height(32.dp))
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Enter your email") },
+                    label = { Text("Enter your email", color = Color.Gray) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
-                )
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
+
+                ))
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Enter your password") },
+                    label = { Text("Enter your password", color = Color.Gray) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        //.height(56.dp),
+                        .padding(bottom = 16.dp),
                     shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF4A90E2),
+                        unfocusedBorderColor = Color(0xFF4A90E2),
+                        cursorColor = Color(0xFF4A90E2)
+                    ),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {

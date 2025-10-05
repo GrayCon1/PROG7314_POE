@@ -43,6 +43,10 @@ android {
 }
 
 dependencies {
+    implementation("androidx.navigation:navigation-compose:2.7.3")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -62,6 +66,14 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:6.12.0")
     implementation(libs.play.services.location)
     implementation(libs.androidx.compose.foundation)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
+
+
+
+    // ✅ MapLibre SDK for offline maps
+    implementation("org.maplibre.gl:android-sdk:9.5.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
