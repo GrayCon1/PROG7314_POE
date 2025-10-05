@@ -58,7 +58,8 @@ dependencies {
     implementation(libs.androidx.navigation.dynamic.features.fragment)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.material3)
+    implementation("com.google.maps.android:maps-compose:6.12.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
