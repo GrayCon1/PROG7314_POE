@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "325691994355",
+    "firebase_url": "https://geoquest-7d94f-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "geoquest-7d94f",
+    "storage_bucket": "geoquest-7d94f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325691994355:android:636b39e53d769b958cc786",
+        "android_client_info": {
+          "package_name": "com.PROG7314.GeoQuest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYHj76b42giua6UfMnBtRl7Nl7yoaZ6yc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.PROG7314.GeoQuest" />
+                  <option name="mobileSdkAppId" value="1:325691994355:android:636b39e53d769b958cc786" />
+                  <option name="projectId" value="geoquest-7d94f" />
+                  <option name="projectNumber" value="325691994355" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

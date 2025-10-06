@@ -22,8 +22,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.prog7314.geoquest.data.data.LocationData
+import com.prog7314.geoquest.data.model.LocationViewModel
+import kotlin.toString
 
 @Preview
 @Composable
@@ -33,12 +37,26 @@ fun AddScreenPreview() {
 
 @Composable
 fun AddScreen(navController: NavController) {
+    val viewModel: LocationViewModel = viewModel()
+
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var isPublic by remember { mutableStateOf(true) }
     var selectedImageUri by remember { mutableStateOf<String?>(null) }
+    var latitude by remember { mutableStateOf(0.0) }
+    var longitude by remember { mutableStateOf(0.0) }
 
     val context = LocalContext.current
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    // Handle error messages
+    errorMessage?.let { error ->
+        LaunchedEffect(error) {
+            // Show error (you can use a Snackbar or Toast)
+            viewModel.clearError()
+        }
+    }
 
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -46,15 +64,6 @@ fun AddScreen(navController: NavController) {
     ) { uri ->
         uri?.let {
             selectedImageUri = it.toString()
-        }
-    }
-
-    // Camera launcher
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            // Handle camera result
         }
     }
 
@@ -84,7 +93,6 @@ fun AddScreen(navController: NavController) {
                 ImageUploadSection(
                     selectedImageUri = selectedImageUri,
                     onImageClick = {
-                        // You can add a dialog here to choose between camera and gallery
                         imagePickerLauncher.launch("image/*")
                     }
                 )
@@ -144,30 +152,35 @@ fun AddScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Google Maps placeholder
-                GoogleMapsPlaceholder()
+                // Google Maps placeholder with save button
+                GoogleMapsPlaceholder(
+                    onSaveLocation = {
+                        // Get current user ID (you'll need to implement this)
+                        val userId = "" // Replace with actual user ID
+
+                        val locationData = LocationData(
+                            userId = userId,
+                            name = name,
+                            description = description,
+                            latitude = latitude,
+                            longitude = longitude,
+                            imageUri = selectedImageUri,
+                            visibility = if (isPublic) "public" else "private"
+                        )
+
+                        viewModel.addLocation(locationData)
+
+                        // Navigate back or show success message
+                        navController.popBackStack()
+                    }
+                )
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Save button
-                Button(
-                    onClick = {
-                        // Handle save logic here
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF87CEEB)
-                    )
-                ) {
-                    Text(
-                        text = "Save",
-                        color = Color.Black,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF87CEEB),
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
 
@@ -176,6 +189,7 @@ fun AddScreen(navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun ImageUploadSection(
@@ -262,7 +276,7 @@ fun VisibilityToggle(
 }
 
 @Composable
-fun GoogleMapsPlaceholder() {
+fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -271,15 +285,40 @@ fun GoogleMapsPlaceholder() {
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0))
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = "Google Maps Component\n(To be implemented)",
-                textAlign = TextAlign.Center,
-                color = Color.Gray,
-                fontSize = 16.sp
-            )
+            // Map placeholder content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Google Maps Component\n(To be implemented)",
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            // Save location button at bottom
+            Button(
+                onClick = onSaveLocation,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .height(40.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF87CEEB)
+                )
+            ) {
+                Text(
+                    text = "Save Location",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
