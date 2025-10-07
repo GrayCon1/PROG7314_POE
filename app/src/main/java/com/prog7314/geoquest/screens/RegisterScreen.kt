@@ -273,10 +273,9 @@ fun RegisterScreen(
                             val userData = UserData(
                                 name = fullName.trim(),
                                 username = username.trim(),
-                                email = email.trim().lowercase(),
-                                password = password
+                                email = email.trim().lowercase()
                             )
-                            userViewModel.registerUser(userData)
+                            userViewModel.registerUser(userData, password.trim())
                         }
                     }
                 },

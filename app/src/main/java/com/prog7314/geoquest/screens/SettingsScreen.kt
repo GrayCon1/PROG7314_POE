@@ -104,8 +104,8 @@ fun SettingsScreen(navController: NavController, userViewModel: UserViewModel) {
     SettingsContent(
         user = user,
         isLoading = isLoading,
-        onUpdateUser = { userId, name, email, newPassword, currentPassword ->
-            userViewModel.updateUser(userId, name, email, newPassword, currentPassword)
+        onUpdateUser = { userData, newPassword, currentPassword ->
+            userViewModel.updateUser(userData, newPassword, currentPassword)
         }
     )
 }
@@ -114,7 +114,7 @@ fun SettingsScreen(navController: NavController, userViewModel: UserViewModel) {
 fun SettingsContent(
     user: UserData,
     isLoading: Boolean,
-    onUpdateUser: (String, String, String, String, String) -> Unit
+    onUpdateUser: (UserData, String, String) -> Unit
 ) {
     var username by remember { mutableStateOf(user.username) }
     var newPassword by remember { mutableStateOf("") }
@@ -370,9 +370,7 @@ fun SettingsContent(
                                     validationError = "No changes were made"
                                 } else {
                                     onUpdateUser(
-                                        user.id,
-                                        username,
-                                        user.email,
+                                        user.copy(username = username),
                                         newPassword,
                                         currentPassword
                                     )
@@ -417,14 +415,13 @@ fun SettingsScreenPreview() {
         name = "John Doe",
         username = "johndoe",
         email = "john.doe@example.com",
-        password = "password123",
         dateJoined = System.currentTimeMillis()
     )
 
     SettingsContent(
         user = mockUser,
         isLoading = false,
-        onUpdateUser = { _, _, _, _, _ ->
+        onUpdateUser = { _, _, _->
             // Mock function for preview
         }
     )
