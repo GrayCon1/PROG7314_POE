@@ -1,5 +1,6 @@
 package com.prog7314.geoquest.screens
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -43,8 +44,8 @@ fun AddScreen(navController: NavController) {
     var description by remember { mutableStateOf("") }
     var isPublic by remember { mutableStateOf(true) }
     var selectedImageUri by remember { mutableStateOf<String?>(null) }
-    var latitude by remember { mutableStateOf(0.0) }
-    var longitude by remember { mutableStateOf(0.0) }
+    var latitude by remember { mutableDoubleStateOf(0.0) }
+    var longitude by remember { mutableDoubleStateOf(0.0) }
 
     val context = LocalContext.current
     val isLoading by viewModel.isLoading.collectAsState()
@@ -172,6 +173,9 @@ fun AddScreen(navController: NavController) {
 
                         // Navigate back or show success message
                         navController.popBackStack()
+                        Toast
+                            .makeText(context, "Location Added", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 )
 
@@ -302,7 +306,10 @@ fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {}) {
             Spacer(modifier = Modifier.height(16.dp))
             // Save location button at bottom
             Button(
-                onClick = onSaveLocation,
+                onClick =
+                    {
+                        onSaveLocation}
+                ,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)

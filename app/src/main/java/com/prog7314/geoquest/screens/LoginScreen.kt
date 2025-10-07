@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -199,10 +200,14 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 Row(
                     horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Don't have an account? ", color = Color(0xFF212121))
-                    TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
+                    TextButton(
+                        onClick = { navController.navigate(Screen.Register.route) },
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
                         Text("Register Now", color = Color(0xFF26C6DA))
                     }
                 }
