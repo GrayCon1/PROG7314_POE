@@ -176,7 +176,7 @@ fun AddScreen(navController: NavController) {
                         Toast
                             .makeText(context, "Location Added", Toast.LENGTH_SHORT)
                             .show()
-                    }
+                    }, canSave = name.isNotBlank() && description.isNotBlank() && selectedImageUri != null
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -280,7 +280,7 @@ fun VisibilityToggle(
 }
 
 @Composable
-fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {}) {
+fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {},canSave: Boolean = true) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -308,7 +308,7 @@ fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {}) {
             Button(
                 onClick =
                     {
-                        onSaveLocation}
+                        onSaveLocation}, enabled = canSave
                 ,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

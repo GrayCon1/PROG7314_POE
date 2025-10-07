@@ -86,7 +86,7 @@ fun RegisterScreen(navController: NavController) {
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-            navController.navigate("login") {
+            navController.navigate("navigation_screen") {
                 popUpTo("register") { inclusive = true }
             }
         }

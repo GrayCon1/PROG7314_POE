@@ -89,6 +89,63 @@ class LocationViewModel : ViewModel() {
         }
     }
 
+    fun loadUserLocationsByDateRange(userId: String, startDate: Long, endDate: Long) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            locationRepo.getUserLocationsByDateRange(userId, startDate, endDate)
+                .onSuccess { locationList ->
+                    _locations.value = locationList
+                    _errorMessage.value = null
+                }
+                .onFailure { exception ->
+                    _errorMessage.value = exception.message
+                }
+            _isLoading.value = false
+        }
+    }
+
+    // Load user locations by date range and visibility
+    fun loadUserLocationsByDateRangeAndVisibility(
+        userId: String,
+        startDate: Long,
+        endDate: Long,
+        visibility: String
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            locationRepo.getUserLocationsByDateRangeAndVisibility(
+                userId,
+                startDate,
+                endDate,
+                visibility
+            )
+                .onSuccess { locationList ->
+                    _locations.value = locationList
+                    _errorMessage.value = null
+                }
+                .onFailure { exception ->
+                    _errorMessage.value = exception.message
+                }
+            _isLoading.value = false
+        }
+    }
+
+    // Load public locations by date range
+    fun loadPublicLocationsByDateRange(startDate: Long, endDate: Long) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            locationRepo.getPublicLocationsByDateRange(startDate, endDate)
+                .onSuccess { locationList ->
+                    _locations.value = locationList
+                    _errorMessage.value = null
+                }
+                .onFailure { exception ->
+                    _errorMessage.value = exception.message
+                }
+            _isLoading.value = false
+        }
+    }
+
     // Clear error message
     fun clearError() {
         _errorMessage.value = null

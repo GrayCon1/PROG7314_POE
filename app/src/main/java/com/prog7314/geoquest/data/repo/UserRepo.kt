@@ -4,6 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.prog7314.geoquest.data.data.UserData
 import kotlinx.coroutines.tasks.await
 import kotlin.text.get
+import kotlin.text.set
 
 class UserRepo {
 
@@ -32,6 +33,15 @@ class UserRepo {
         }
     }
 
+    suspend fun updateUser(userId: String, updatedUserData: UserData): Result<Unit> {
+        return try {
+            usersCollection.document(userId).set(updatedUserData).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
     suspend fun getUserByEmailAndPassword(email: String, password: String): Result<UserData?> {
         return try {
@@ -44,13 +54,19 @@ class UserRepo {
                 id = snapshot.documents.firstOrNull()?.id ?: ""
             )
 
-            // Note: In production, you should use proper password hashing
-            // This is a simplified implementation
-            Result.success(user)
+            // Check if user exists and password matches
+            val validUser = if (user != null && user.password == password) {
+                user
+            } else {
+                null
+            }
+
+            Result.success(validUser)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 
     suspend fun deleteUser(userId: String): Result<Unit> {
         return try {

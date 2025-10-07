@@ -94,6 +94,79 @@ class UserViewModel : ViewModel() {
             _isLoading.value = false
         }
     }
+    fun getCurrentUser(): UserData? {
+        return _currentUser.value
+    }
+
+    fun isUserLoggedIn(): Boolean {
+        return _currentUser.value != null
+    }
+    fun updateUser(userId: String, name: String, email: String, newPassword: String?, currentPassword: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            // First verify current password
+            _currentUser.value?.let { user ->
+                if (user.password != currentPassword) {
+                    _errorMessage.value = "Current password is incorrect"
+                    _isLoading.value = false
+                    return@launch
+                }
+
+                // Check if any changes were made
+                val hasNameChanged = name.trim() != user.name
+                val hasEmailChanged = email.trim().lowercase() != user.email
+                val hasPasswordChanged = !newPassword.isNullOrBlank()
+
+                if (!hasNameChanged && !hasEmailChanged && !hasPasswordChanged) {
+                    _errorMessage.value = "No changes were made"
+                    _isLoading.value = false
+                    return@launch
+                }
+
+                // If email changed, check if new email already exists
+                if (hasEmailChanged) {
+                    userRepo.checkUserExists(email.trim().lowercase())
+                        .onSuccess { exists ->
+                            if (exists) {
+                                _errorMessage.value = "Email already exists"
+                                _isLoading.value = false
+                                return@onSuccess
+                            }
+
+                            // Proceed with update
+                            performUpdate(userId, name, email, newPassword, user)
+                        }
+                        .onFailure { exception ->
+                            _errorMessage.value = exception.message
+                            _isLoading.value = false
+                        }
+                } else {
+                    // No email change, proceed with update
+                    performUpdate(userId, name, email, newPassword, user)
+                }
+            }
+        }
+    }
+
+    private suspend fun performUpdate(userId: String, name: String, email: String, newPassword: String?, currentUser: UserData) {
+        val updatedUser = currentUser.copy(
+            name = name.trim(),
+            email = email.trim().lowercase(),
+            password = if (!newPassword.isNullOrBlank()) newPassword else currentUser.password
+        )
+
+        userRepo.updateUser(userId, updatedUser)
+            .onSuccess {
+                _currentUser.value = updatedUser
+                _errorMessage.value = "Profile updated successfully"
+            }
+            .onFailure { exception ->
+                _errorMessage.value = exception.message
+            }
+        _isLoading.value = false
+    }
+
 
     // Logout user
     fun logoutUser() {
