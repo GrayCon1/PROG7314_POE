@@ -26,6 +26,24 @@ class UserViewModel : ViewModel() {
     private val _loginSuccess = MutableStateFlow(false)
     val loginSuccess: StateFlow<Boolean> = _loginSuccess.asStateFlow()
 
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            userRepo.signInWithGoogle(idToken)
+                .onSuccess { user ->
+                    _currentUser.value = user
+                    _loginSuccess.value = true
+                    _errorMessage.value = null
+                }
+                .onFailure { exception ->
+                    _errorMessage.value = "Google Sign-In failed: ${exception.message}"
+                    _loginSuccess.value = false
+                }
+            _isLoading.value = false
+        }
+    }
+
+    // ... rest of UserViewModel
     fun registerUser(userData: UserData, password: String) {
         viewModelScope.launch {
             _isLoading.value = true

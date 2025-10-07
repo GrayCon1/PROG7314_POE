@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.prog7314.geoquest.data.model.UserViewModel
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -61,13 +62,19 @@ fun SettingsScreen(navController: NavController, userViewModel: UserViewModel) {
     val isLoading by userViewModel.isLoading.collectAsState()
     val errorMessage by userViewModel.errorMessage.collectAsState()
     val context = LocalContext.current
+    var isSigningOut by remember { mutableStateOf(false) }
 
     // Check if user is logged in, if not redirect to login
-    LaunchedEffect(currentUser) {
+    LaunchedEffect(currentUser, isSigningOut) {
         if (currentUser == null) {
-            Toast.makeText(context, "Please log in to access settings", Toast.LENGTH_LONG).show()
+            val message = if (isSigningOut) {
+                "Signed out successfully"
+            } else {
+                "Please log in to access settings"
+            }
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             navController.navigate("login") {
-                popUpTo("settings") { inclusive = true }
+                popUpTo(0) { inclusive = true } // Clear back stack
             }
         }
     }
@@ -106,6 +113,10 @@ fun SettingsScreen(navController: NavController, userViewModel: UserViewModel) {
         isLoading = isLoading,
         onUpdateUser = { userData, newPassword, currentPassword ->
             userViewModel.updateUser(userData, newPassword, currentPassword)
+        },
+        onSignOut = {
+            isSigningOut = true
+            userViewModel.logoutUser()
         }
     )
 }
@@ -114,7 +125,8 @@ fun SettingsScreen(navController: NavController, userViewModel: UserViewModel) {
 fun SettingsContent(
     user: UserData,
     isLoading: Boolean,
-    onUpdateUser: (UserData, String, String) -> Unit
+    onUpdateUser: (UserData, String, String) -> Unit,
+    onSignOut: () -> Unit
 ) {
     var username by remember { mutableStateOf(user.username) }
     var newPassword by remember { mutableStateOf("") }
@@ -353,53 +365,80 @@ fun SettingsContent(
                     }
                 }
 
-                // Save Button
-                Button(
-                    onClick = {
-                        when {
-                            currentPassword.isBlank() -> {
-                                validationError = "Current password is required to save changes"
-                            }
-
-                            newPassword.isNotBlank() && newPassword.length < 6 -> {
-                                validationError = "New password must be at least 6 characters"
-                            }
-
-                            else -> {
-                                if (newPassword.isBlank() && username == user.username) {
-                                    validationError = "No changes were made"
-                                } else {
-                                    onUpdateUser(
-                                        user.copy(username = username),
-                                        newPassword,
-                                        currentPassword
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(28.dp),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4A90E2)),
-                    enabled = !isLoading
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color(0xFF4A90E2),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
+                    // Sign Out Button
+                    Button(
+                        onClick = onSignOut,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(28.dp),
+                        border = BorderStroke(2.dp, Color.Red),
+                        enabled = !isLoading
+                    ) {
                         Text(
-                            text = "SAVE",
-                            color = Color(0xFF4A90E2),
+                            text = "SIGN OUT",
+                            color = Color.Red,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
+                    }
+
+                    // Save Button
+                    Button(
+                        onClick = {
+                            when {
+                                currentPassword.isBlank() -> {
+                                    validationError = "Current password is required to save changes"
+                                }
+
+                                newPassword.isNotBlank() && newPassword.length < 6 -> {
+                                    validationError = "New password must be at least 6 characters"
+                                }
+
+                                else -> {
+                                    if (newPassword.isBlank() && username == user.username) {
+                                        validationError = "No changes were made"
+                                    } else {
+                                        onUpdateUser(
+                                            user.copy(username = username),
+                                            newPassword,
+                                            currentPassword
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(28.dp),
+                        border = BorderStroke(2.dp, Color(0xFF4A90E2)),
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF4A90E2),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "SAVE",
+                                color = Color(0xFF4A90E2),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
@@ -423,6 +462,7 @@ fun SettingsScreenPreview() {
         isLoading = false,
         onUpdateUser = { _, _, _->
             // Mock function for preview
-        }
+        },
+        onSignOut = {}
     )
 }

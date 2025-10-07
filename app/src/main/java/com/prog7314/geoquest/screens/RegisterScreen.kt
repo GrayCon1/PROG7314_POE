@@ -1,16 +1,12 @@
 package com.prog7314.geoquest.screens
 
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,13 +49,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.prog7314.geoquest.R
 import com.prog7314.geoquest.data.data.UserData
 import com.prog7314.geoquest.data.model.UserViewModel
-import android.widget.Toast
+import kotlinx.coroutines.launch
+import java.security.SecureRandom
+import java.util.UUID
 
 @Preview(showBackground = true)
 @Composable
@@ -83,6 +86,7 @@ fun RegisterScreen(
     val isLoading by userViewModel.isLoading.collectAsState()
     val errorMessage by userViewModel.errorMessage.collectAsState()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     // Handle successful registration
     LaunchedEffect(currentUser) {
@@ -99,6 +103,56 @@ fun RegisterScreen(
         errorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             userViewModel.clearError()
+        }
+    }
+
+    // Google Sign-In Logic
+    val handleGoogleSignIn: () -> Unit = {
+        coroutineScope.launch {
+            try {
+                val credentialManager = CredentialManager.create(context)
+                val nonce = UUID.randomUUID().toString()
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(context.getString(R.string.default_web_client_id))
+                    .setNonce(nonce)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = context,
+                )
+                val credential = result.credential
+                when (credential) {
+                    is GoogleIdTokenCredential -> {
+                        userViewModel.signInWithGoogle(credential.idToken)
+                    }
+
+                    is CustomCredential -> {
+                        if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                            val googleIdTokenCredential =
+                                GoogleIdTokenCredential.createFrom(credential.data)
+                            userViewModel.signInWithGoogle(googleIdTokenCredential.idToken)
+                        }
+                    }
+
+                    else -> {
+                        Toast.makeText(
+                            context,
+                            "Unexpected credential type: ${credential::class.java.simpleName}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+            } catch (e: GetCredentialException) {
+                Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
+            }
         }
     }
 
@@ -321,7 +375,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             IconButton(
-                onClick = { /* handle google login */ },
+                onClick = { handleGoogleSignIn() },
                 shape = IconButtonDefaults.filledShape,
                 modifier = Modifier
                     .fillMaxWidth()

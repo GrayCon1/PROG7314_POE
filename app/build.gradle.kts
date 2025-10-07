@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     kotlin("plugin.serialization") version "2.2.0"
-    // Add the dependency for the Google services Gradle plugin
     id("com.google.gms.google-services") version "4.4.3"
 }
 
@@ -12,7 +11,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.PROG7314.GeoQuest"
+        applicationId = "com.prog7314.geoquest"
         minSdk = 30
         targetSdk = 36
         versionCode = 1
@@ -66,14 +65,15 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.play.services.auth)
 
-    // Import the BoM for the Firebase platform
     implementation(platform(libs.firebase.bom))
-
-    // Firebase dependencies (no version specified when using BOM)
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(libs.firebase.ui.auth)
+    implementation(libs.firebase.sessions)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -10,10 +10,23 @@
       "client_info": {
         "mobilesdk_app_id": "1:325691994355:android:636b39e53d769b958cc786",
         "android_client_info": {
-          "package_name": "com.PROG7314.GeoQuest"
+          "package_name": "com.prog7314.geoquest"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "325691994355-gkbnfjo832k8khrn69v9rv6nli1d2tq4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.prog7314.geoquest",
+            "certificate_hash": "b0c1070301518f5ab70cbedacdd29e4195ec089e"
+          }
+        },
+        {
+          "client_id": "325691994355-ju3ob66e7j4fddv8qlnqcfjk6visgvlq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBYHj76b42giua6UfMnBtRl7Nl7yoaZ6yc"

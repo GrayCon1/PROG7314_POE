@@ -1,14 +1,12 @@
 package com.prog7314.geoquest.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,6 +35,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,12 +48,16 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.prog7314.geoquest.R
 import com.prog7314.geoquest.data.model.UserViewModel
-import android.widget.Toast
+import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
@@ -74,19 +77,20 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf("") }
 
-    // Remove this line: val userViewModel: UserViewModel = viewModel()
     val currentUser by userViewModel.currentUser.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
     val errorMessage by userViewModel.errorMessage.collectAsState()
     val loginSuccess by userViewModel.loginSuccess.collectAsState()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     // Handle successful login
     LaunchedEffect(loginSuccess) {
         if (loginSuccess && currentUser != null) {
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-            navController.navigate("home") { // Navigate to home instead of navigation_screen
+            navController.navigate("home") {
                 popUpTo("login") { inclusive = true }
+                popUpTo("register") { inclusive = true } // Also pop register
             }
         }
     }
@@ -99,7 +103,52 @@ fun LoginScreen(
         }
     }
 
-    // Remove the background Box since it's now handled in MainActivity
+    // Google Sign-In Logic
+    val handleGoogleSignIn: () -> Unit = {
+        coroutineScope.launch {
+            try {
+                val credentialManager = CredentialManager.create(context)
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(context.getString(R.string.default_web_client_id))
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = context,
+                )
+                val credential = result.credential
+                when (credential) {
+                    is GoogleIdTokenCredential -> {
+                        userViewModel.signInWithGoogle(credential.idToken)
+                    }
+
+                    is CustomCredential -> {
+                        if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                            val googleIdTokenCredential =
+                                GoogleIdTokenCredential.createFrom(credential.data)
+                            userViewModel.signInWithGoogle(googleIdTokenCredential.idToken)
+                        }
+                    }
+
+                    else -> {
+                        Toast.makeText(
+                            context,
+                            "Unexpected credential type: ${credential::class.java.simpleName}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: GetCredentialException) {
+                Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -114,6 +163,7 @@ fun LoginScreen(
                 .padding(32.dp)
                 .fillMaxSize()
         ) {
+            // ... (rest of the UI, e.g., Text, OutlinedTextFields, etc.)
             Spacer(modifier = Modifier.height(32.dp))
             Text(
                 text = "Welcome to",
@@ -255,7 +305,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedButton(
-                    onClick = { /* Handle Google Sign-In */ },
+                    onClick = { handleGoogleSignIn() }, // Updated onClick
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(2.dp, Color(0xFF64B5F6)),
                     modifier = Modifier

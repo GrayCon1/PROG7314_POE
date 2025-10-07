@@ -1,6 +1,7 @@
 package com.prog7314.geoquest.data.repo
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.prog7314.geoquest.data.data.UserData
@@ -12,6 +13,39 @@ class UserRepo {
     private val firestore = FirebaseFirestore.getInstance()
     private val usersCollection = firestore.collection("users")
 
+    // ... existing registerUser, loginUser, etc. methods
+
+    suspend fun signInWithGoogle(idToken: String): Result<UserData> {
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val authResult = auth.signInWithCredential(credential).await()
+            val user = authResult.user ?: throw Exception("Google Sign-In failed")
+
+            // Check if user is new
+            val isNewUser = authResult.additionalUserInfo?.isNewUser ?: false
+            if (isNewUser) {
+                // Create new user profile in Firestore
+                val newUser = UserData(
+                    id = user.uid,
+                    name = user.displayName ?: "N/A",
+                    username = user.email?.substringBefore('@') ?: "user_${user.uid.take(6)}",
+                    email = user.email ?: ""
+                )
+                usersCollection.document(user.uid).set(newUser).await()
+                Result.success(newUser)
+            } else {
+                // Fetch existing user profile from Firestore
+                val doc = usersCollection.document(user.uid).get().await()
+                val userData = doc.toObject(UserData::class.java)?.copy(id = user.uid)
+                    ?: throw Exception("User profile not found")
+                Result.success(userData)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ... rest of the UserRepo class
     suspend fun registerUser(userData: UserData, password: String): Result<UserData> {
         return try {
             // Create user in Firebase Auth

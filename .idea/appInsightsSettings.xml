@@ -8,7 +8,7 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.PROG7314.GeoQuest" />
+                  <option name="appId" value="com.prog7314.geoquest" />
                   <option name="mobileSdkAppId" value="1:325691994355:android:636b39e53d769b958cc786" />
                   <option name="projectId" value="geoquest-7d94f" />
                   <option name="projectNumber" value="325691994355" />

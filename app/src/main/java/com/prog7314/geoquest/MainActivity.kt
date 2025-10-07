@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -25,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.FirebaseApp
 import com.prog7314.geoquest.data.model.UserViewModel
 import com.prog7314.geoquest.screens.AddScreen
@@ -44,6 +46,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FirebaseApp.initializeApp(this)
+            // Instantiate a Google sign-in request
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setServerClientId(getString(R.string.default_web_client_id))
+                .setFilterByAuthorizedAccounts(true).setAutoSelectEnabled(true)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
             PROG7314Theme {
                 Main()
             }
@@ -100,8 +112,10 @@ fun Main() {
                 ) { backStackEntry ->
                     val lat = backStackEntry.arguments?.getString("lat")?.toDoubleOrNull()
                     val lng = backStackEntry.arguments?.getString("lng")?.toDoubleOrNull()
-                    val name = backStackEntry.arguments?.getString("name")?.let { URLDecoder.decode(it, StandardCharsets.UTF_8.toString()) }
-                    val desc = backStackEntry.arguments?.getString("desc")?.let { URLDecoder.decode(it, StandardCharsets.UTF_8.toString()) }
+                    val name = backStackEntry.arguments?.getString("name")
+                        ?.let { URLDecoder.decode(it, StandardCharsets.UTF_8.toString()) }
+                    val desc = backStackEntry.arguments?.getString("desc")
+                        ?.let { URLDecoder.decode(it, StandardCharsets.UTF_8.toString()) }
                     HomeScreen(navController, userViewModel, lat, lng, name, desc)
                 }
                 composable(Screen.Logbook.route) {
@@ -133,7 +147,8 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?) {
     NavigationBar {
         navigationItems.forEachIndexed { index, item ->
             val isMiddleItem = index == 1
-            val route = if (item.route.contains("?")) item.route.substringBefore('?') else item.route
+            val route =
+                if (item.route.contains("?")) item.route.substringBefore('?') else item.route
             val isSelected = if (isMiddleItem) {
                 currentRoute?.startsWith("home") == true || currentRoute?.startsWith("add") == true
             } else {
@@ -164,3 +179,5 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String?) {
         }
     }
 }
+
+
