@@ -80,11 +80,6 @@ class LocationRepo {
         endDate: Long
     ): Result<List<LocationData>> {
         return try {
-            // NOTE: This query requires a composite index in Firestore.
-            // Go to your Firebase Console -> Firestore Database -> Indexes.
-            // Create a new index for the 'locations' collection with the following fields:
-            // 1. userId (Ascending)
-            // 2. dateAdded (Descending)
             val snapshot = locationsCollection
                 .whereEqualTo("userId", userId)
                 .whereGreaterThanOrEqualTo("dateAdded", startDate)

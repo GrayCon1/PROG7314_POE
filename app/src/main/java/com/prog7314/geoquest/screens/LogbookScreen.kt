@@ -26,6 +26,8 @@ import com.prog7314.geoquest.data.data.LocationData
 import com.prog7314.geoquest.data.model.LocationViewModel
 import com.prog7314.geoquest.data.model.UserViewModel
 import com.prog7314.geoquest.ui.theme.PROG7314Theme
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -145,7 +147,9 @@ fun LogbookContent(
                 ) {
                     items(locations) { location ->
                         LogbookEntryCard(location = location) {
-                            // navController.navigate("locationDetail/${location.id}")
+                            val encodedName = URLEncoder.encode(location.name, StandardCharsets.UTF_8.toString())
+                            val encodedDesc = URLEncoder.encode(location.description, StandardCharsets.UTF_8.toString())
+                            navController.navigate("home?lat=${location.latitude}&lng=${location.longitude}&name=$encodedName&desc=$encodedDesc")
                         }
                     }
                 }

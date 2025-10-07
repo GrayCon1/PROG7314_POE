@@ -11,10 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LocationViewModel : ViewModel() {
-
     private val locationRepo = LocationRepo()
 
-    // UI State
     private val _locations = MutableStateFlow<List<LocationData>>(emptyList())
     val locations: StateFlow<List<LocationData>> = _locations.asStateFlow()
 
@@ -24,132 +22,63 @@ class LocationViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-
-    // Load all locations
-    fun loadAllLocations() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            locationRepo.getAllLocations()
-                .onSuccess { locationList ->
-                    _locations.value = locationList
-                    _errorMessage.value = null
-                }
-                .onFailure { exception ->
-                    _errorMessage.value = exception.message
-                }
-            _isLoading.value = false
-        }
-    }
-
-    // Load user-specific locations
-    fun loadUserLocations(userId: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            locationRepo.getUserLocations(userId)
-                .onSuccess { locationList ->
-                    _locations.value = locationList
-                    _errorMessage.value = null
-                }
-                .onFailure { exception ->
-                    _errorMessage.value = exception.message
-                }
-            _isLoading.value = false
-        }
-    }
-
-    // Add new location
     fun addLocation(locationData: LocationData) {
         viewModelScope.launch {
             _isLoading.value = true
-            locationRepo.addLocation(locationData)
-                .onSuccess {
-                    // Refresh locations after adding
-                    loadAllLocations() // This will now include the new location
-                    _errorMessage.value = null
-                }
-                .onFailure { exception ->
-                    _errorMessage.value = exception.message
-                }
-            _isLoading.value = false
+            try {
+                locationRepo.addLocation(locationData)
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
-    // Delete location
-    fun deleteLocation(locationId: String) {
+    fun loadAllLocations() {
         viewModelScope.launch {
             _isLoading.value = true
-            locationRepo.deleteLocation(locationId)
-                .onSuccess {
-                    // Refresh locations after deletion
-                    loadAllLocations()
-                    _errorMessage.value = null
-                }
-                .onFailure { exception ->
-                    _errorMessage.value = exception.message
-                }
-            _isLoading.value = false
+            try {
+                _locations.value = locationRepo.getAllLocations().getOrThrow()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadUserLocations(userId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                _locations.value = locationRepo.getUserLocations(userId).getOrThrow()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
     fun loadUserLocationsByDateRange(userId: String, startDate: Long, endDate: Long) {
         viewModelScope.launch {
             _isLoading.value = true
-            locationRepo.getUserLocationsByDateRange(userId, startDate, endDate)
-                .onSuccess { locationList ->
-                    _locations.value = locationList
-                    _errorMessage.value = null
-                }
-                .onFailure { exception ->
-                    _errorMessage.value = exception.message
-                }
-            _isLoading.value = false
+            try {
+                _locations.value = locationRepo.getUserLocationsByDateRange(userId, startDate, endDate).getOrThrow()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
-    // Load user locations by date range and visibility
-    fun loadUserLocationsByDateRangeAndVisibility(
-        userId: String,
-        startDate: Long,
-        endDate: Long,
-        visibility: String
-    ) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            locationRepo.getUserLocationsByDateRangeAndVisibility(
-                userId,
-                startDate,
-                endDate,
-                visibility
-            )
-                .onSuccess { locationList ->
-                    _locations.value = locationList
-                    _errorMessage.value = null
-                }
-                .onFailure { exception ->
-                    _errorMessage.value = exception.message
-                }
-            _isLoading.value = false
-        }
-    }
-
-    // Load public locations by date range
-    fun loadPublicLocationsByDateRange(startDate: Long, endDate: Long) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            locationRepo.getPublicLocationsByDateRange(startDate, endDate)
-                .onSuccess { locationList ->
-                    _locations.value = locationList
-                    _errorMessage.value = null
-                }
-                .onFailure { exception ->
-                    _errorMessage.value = exception.message
-                }
-            _isLoading.value = false
-        }
-    }
-
-    // Clear error message
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun clearLocations() {
+        _locations.value = emptyList()
     }
 }

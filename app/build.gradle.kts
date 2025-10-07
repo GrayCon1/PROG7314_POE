@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.maps.compose.v6120)
     implementation(libs.play.services.location)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.play.services.auth)
 
     // Import the BoM for the Firebase platform
     implementation(platform(libs.firebase.bom))

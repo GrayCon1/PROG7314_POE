@@ -71,13 +71,27 @@ fun HomeScreenPreview() {
 }
 
 @Composable
-fun HomeScreen(navController: NavController, userViewModel: UserViewModel) {
+fun HomeScreen(
+    navController: NavController,
+    userViewModel: UserViewModel,
+    lat: Double?,
+    lng: Double?,
+    name: String?,
+    desc: String?
+) {
     val locationViewModel: LocationViewModel = viewModel()
-    MapScreen(userViewModel, locationViewModel)
+    MapScreen(userViewModel, locationViewModel, lat, lng, name, desc)
 }
 
 @Composable
-fun MapScreen(userViewModel: UserViewModel, locationViewModel: LocationViewModel) {
+fun MapScreen(
+    userViewModel: UserViewModel,
+    locationViewModel: LocationViewModel,
+    initialLat: Double?,
+    initialLng: Double?,
+    initialName: String?,
+    initialDesc: String?
+) {
     val context = LocalContext.current
     val currentDeviceLocation = remember { mutableStateOf<LatLng?>(null) }
     val locations by locationViewModel.locations.collectAsState()
@@ -86,6 +100,8 @@ fun MapScreen(userViewModel: UserViewModel, locationViewModel: LocationViewModel
     var showNotifications by remember { mutableStateOf(false) }
     var showFilter by remember { mutableStateOf(false) }
 
+    val isFromLogbook = initialLat != null && initialLng != null
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -93,7 +109,7 @@ fun MapScreen(userViewModel: UserViewModel, locationViewModel: LocationViewModel
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(isFromLogbook) {
         hasLocationPermission = ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
@@ -104,7 +120,11 @@ fun MapScreen(userViewModel: UserViewModel, locationViewModel: LocationViewModel
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ))
         }
-        locationViewModel.loadAllLocations()
+        if (isFromLogbook) {
+            locationViewModel.clearLocations()
+        } else {
+            locationViewModel.loadAllLocations()
+        }
     }
 
     DisposableEffect(hasLocationPermission) {
@@ -122,20 +142,30 @@ fun MapScreen(userViewModel: UserViewModel, locationViewModel: LocationViewModel
         }
     }
 
-    val defaultLocation = LatLng(-33.974273681640625, 18.46971893310547)
-    val mapCenter = currentDeviceLocation.value ?: defaultLocation
-
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(mapCenter, 15f)
+    val initialCameraPos = if (isFromLogbook) {
+        LatLng(initialLat!!, initialLng!!)
+    } else {
+        currentDeviceLocation.value ?: LatLng(-33.974273681640625, 18.46971893310547)
     }
 
-    LaunchedEffect(currentDeviceLocation.value) {
-        currentDeviceLocation.value?.let {
-            if (cameraPositionState.position.target != it) {
-                cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngZoom(it, 15f)
-                )
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(initialCameraPos, 15f)
+    }
+
+    LaunchedEffect(currentDeviceLocation.value, isFromLogbook) {
+        // Only move to current location if no initial position was provided from logbook
+        if (!isFromLogbook) {
+            currentDeviceLocation.value?.let {
+                if (cameraPositionState.position.target != it) {
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newLatLngZoom(it, 15f)
+                    )
+                }
             }
+        } else {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(LatLng(initialLat!!, initialLng!!), 15f)
+            )
         }
     }
 
@@ -153,12 +183,20 @@ fun MapScreen(userViewModel: UserViewModel, locationViewModel: LocationViewModel
                     strokeWidth = 2f
                 )
             }
-            locations.forEach { locationData ->
+            if (isFromLogbook) {
                 Marker(
-                    state = rememberMarkerState(position = LatLng(locationData.latitude, locationData.longitude)),
-                    title = locationData.name,
-                    snippet = locationData.description
+                    state = rememberMarkerState(position = LatLng(initialLat!!, initialLng!!)),
+                    title = initialName,
+                    snippet = initialDesc
                 )
+            } else {
+                locations.forEach { locationData ->
+                    Marker(
+                        state = rememberMarkerState(position = LatLng(locationData.latitude, locationData.longitude)),
+                        title = locationData.name,
+                        snippet = locationData.description
+                    )
+                }
             }
         }
 
