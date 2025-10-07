@@ -61,7 +61,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material3)
-    implementation("com.google.maps.android:maps-compose:6.12.0")
+    implementation(libs.maps.compose.v6120)
     implementation(libs.play.services.location)
     implementation(libs.androidx.compose.foundation)
 
@@ -69,8 +69,10 @@ dependencies {
     implementation(platform(libs.firebase.bom))
 
     // Firebase dependencies (no version specified when using BOM)
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    implementation(libs.firebase.ui.auth)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -2,6 +2,7 @@ package com.prog7314.geoquest.data.model
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import com.prog7314.geoquest.data.data.LocationData
 import com.prog7314.geoquest.data.repo.LocationRepo
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ class LocationViewModel : ViewModel() {
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
 
     // Load all locations
     fun loadAllLocations() {
@@ -60,9 +62,9 @@ class LocationViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             locationRepo.addLocation(locationData)
-                .onSuccess { locationId ->
+                .onSuccess {
                     // Refresh locations after adding
-                    loadAllLocations()
+                    loadAllLocations() // This will now include the new location
                     _errorMessage.value = null
                 }
                 .onFailure { exception ->

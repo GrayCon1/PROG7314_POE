@@ -83,7 +83,7 @@ fun Main() {
                     LogbookScreen(navController, userViewModel)
                 }
                 composable(Screen.Add.route) {
-                    AddScreen(navController)
+                    AddScreen(navController, userViewModel)
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen(navController, userViewModel)

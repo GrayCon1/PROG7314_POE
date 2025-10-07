@@ -47,17 +47,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.prog7314.geoquest.data.model.UserViewModel
 import android.widget.Toast
-import androidx.lifecycle.viewmodel.compose.viewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.compareTo
-import kotlin.text.format
 import com.prog7314.geoquest.data.data.UserData
 
 @Composable
@@ -121,6 +116,7 @@ fun SettingsContent(
     isLoading: Boolean,
     onUpdateUser: (String, String, String, String, String) -> Unit
 ) {
+    var username by remember { mutableStateOf(user.username) }
     var newPassword by remember { mutableStateOf("") }
     var currentPassword by remember { mutableStateOf("") }
     var selectedLanguage by remember { mutableStateOf("English") }
@@ -225,20 +221,6 @@ fun SettingsContent(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Email",
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2C3E50),
-                                fontSize = 12.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = user.email,
-                                color = Color.Gray,
-                                fontSize = 11.sp
-                            )
                         }
                     }
                 }
@@ -255,31 +237,8 @@ fun SettingsContent(
                     )
                 }
 
-                // Non-editable Name Display
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Name & Surname",
-                            fontSize = 12.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = user.name,
-                            fontSize = 16.sp,
-                            color = Color(0xFF2C3E50)
-                        )
-                    }
-                }
+
+
 
                 // Non-editable Email Display
                 Card(
@@ -306,6 +265,20 @@ fun SettingsContent(
                         )
                     }
                 }
+
+                // Editable Name Display
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = {
+                        username = it
+                        validationError = ""
+                    },
+                    label = { Text("Username", color = Color.Gray) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
 
                 // Current Password Field
                 OutlinedTextField(
@@ -393,12 +366,12 @@ fun SettingsContent(
                             }
 
                             else -> {
-                                if (newPassword.isBlank()) {
+                                if (newPassword.isBlank() && username == user.username) {
                                     validationError = "No changes were made"
                                 } else {
                                     onUpdateUser(
                                         user.id,
-                                        user.name,
+                                        username,
                                         user.email,
                                         newPassword,
                                         currentPassword
@@ -456,6 +429,3 @@ fun SettingsScreenPreview() {
         }
     )
 }
-
-
-

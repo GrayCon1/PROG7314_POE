@@ -1,15 +1,16 @@
 package com.prog7314.geoquest.screens
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,44 +19,83 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
 import com.prog7314.geoquest.data.data.LocationData
 import com.prog7314.geoquest.data.model.LocationViewModel
-import kotlin.toString
+import com.prog7314.geoquest.data.model.UserViewModel
 
 @Preview
 @Composable
 fun AddScreenPreview() {
-    AddScreen(rememberNavController())
+//    AddScreen(rememberNavController())
 }
 
+@SuppressLint("MissingPermission")
 @Composable
-fun AddScreen(navController: NavController) {
-    val viewModel: LocationViewModel = viewModel()
+fun AddScreen(navController: NavController, userViewModel: UserViewModel) {
+    val locationViewModel: LocationViewModel = viewModel()
+    val currentUser by userViewModel.currentUser.collectAsState()
 
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var isPublic by remember { mutableStateOf(true) }
     var selectedImageUri by remember { mutableStateOf<String?>(null) }
-    var latitude by remember { mutableDoubleStateOf(0.0) }
-    var longitude by remember { mutableDoubleStateOf(0.0) }
 
     val context = LocalContext.current
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val currentDeviceLocation = remember { mutableStateOf<LatLng?>(null) }
+    val isLoading by userViewModel.isLoading.collectAsState()
+    val errorMessage by userViewModel.errorMessage.collectAsState()
+
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            hasLocationPermission = isGranted
+            if (isGranted) {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        currentDeviceLocation.value = LatLng(location.latitude, location.longitude)
+                    }
+                }
+            }
+        }
+    )
+
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    currentDeviceLocation.value = LatLng(location.latitude, location.longitude)
+                }
+            }
+        } else {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
 
     // Handle error messages
     errorMessage?.let { error ->
         LaunchedEffect(error) {
             // Show error (you can use a Snackbar or Toast)
-            viewModel.clearError()
+            userViewModel.clearError()
         }
     }
 
@@ -156,27 +196,47 @@ fun AddScreen(navController: NavController) {
                 // Google Maps placeholder with save button
                 GoogleMapsPlaceholder(
                     onSaveLocation = {
-                        // Get current user ID (you'll need to implement this)
-                        val userId = "" // Replace with actual user ID
+                        val userId = currentUser?.id
+                        val lat = currentDeviceLocation.value?.latitude
+                        val long = currentDeviceLocation.value?.longitude
+
+                        if (userId.isNullOrBlank()) {
+                            Toast.makeText(
+                                context,
+                                "Error: User not logged in.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@GoogleMapsPlaceholder
+                        }
+
+                        if (lat == null || long == null) {
+                            Toast.makeText(
+                                context,
+                                "Error: Could not get current location.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@GoogleMapsPlaceholder
+                        }
 
                         val locationData = LocationData(
                             userId = userId,
                             name = name,
                             description = description,
-                            latitude = latitude,
-                            longitude = longitude,
+                            latitude = lat,
+                            longitude = long,
                             imageUri = selectedImageUri,
                             visibility = if (isPublic) "public" else "private"
                         )
 
-                        viewModel.addLocation(locationData)
+                        locationViewModel.addLocation(locationData)
 
                         // Navigate back or show success message
                         navController.popBackStack()
                         Toast
                             .makeText(context, "Location Added", Toast.LENGTH_SHORT)
                             .show()
-                    }, canSave = name.isNotBlank() && description.isNotBlank() && selectedImageUri != null
+                    },
+                    canSave = name.isNotBlank() && description.isNotBlank() && selectedImageUri != null
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -280,7 +340,7 @@ fun VisibilityToggle(
 }
 
 @Composable
-fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {},canSave: Boolean = true) {
+fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {}, canSave: Boolean = true) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -306,10 +366,8 @@ fun GoogleMapsPlaceholder(onSaveLocation: () -> Unit = {},canSave: Boolean = tru
             Spacer(modifier = Modifier.height(16.dp))
             // Save location button at bottom
             Button(
-                onClick =
-                    {
-                        onSaveLocation}, enabled = canSave
-                ,
+                onClick = onSaveLocation, // Correctly assign the function to onClick
+                enabled = canSave,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)

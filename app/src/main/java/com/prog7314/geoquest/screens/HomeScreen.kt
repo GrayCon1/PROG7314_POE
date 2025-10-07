@@ -36,7 +36,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,8 +47,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -59,10 +58,11 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
+import com.prog7314.geoquest.data.model.LocationViewModel
 import com.prog7314.geoquest.data.model.UserViewModel
-import com.prog7314.geoquest.ui.theme.PROG7314Theme
-import kotlin.text.get
 
 @Preview
 @Composable
@@ -72,13 +72,16 @@ fun HomeScreenPreview() {
 
 @Composable
 fun HomeScreen(navController: NavController, userViewModel: UserViewModel) {
-    MapScreen(userViewModel)
+    val locationViewModel: LocationViewModel = viewModel()
+    MapScreen(userViewModel, locationViewModel)
 }
 
 @Composable
-fun MapScreen(userViewModel: UserViewModel) {
+fun MapScreen(userViewModel: UserViewModel, locationViewModel: LocationViewModel) {
     val context = LocalContext.current
-    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+    val currentDeviceLocation = remember { mutableStateOf<LatLng?>(null) }
+    val locations by locationViewModel.locations.collectAsState()
+
     var hasLocationPermission by remember { mutableStateOf(false) }
     var showNotifications by remember { mutableStateOf(false) }
     var showFilter by remember { mutableStateOf(false) }
@@ -101,13 +104,14 @@ fun MapScreen(userViewModel: UserViewModel) {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ))
         }
+        locationViewModel.loadAllLocations()
     }
 
     DisposableEffect(hasLocationPermission) {
         var locationCallback: LocationCallback? = null
         if (hasLocationPermission) {
             locationCallback = startLocationUpdates(context) { location ->
-                currentLocation = location
+                currentDeviceLocation.value = location
             }
         }
         onDispose {
@@ -119,17 +123,19 @@ fun MapScreen(userViewModel: UserViewModel) {
     }
 
     val defaultLocation = LatLng(-33.974273681640625, 18.46971893310547)
-    val mapCenter = currentLocation ?: defaultLocation
+    val mapCenter = currentDeviceLocation.value ?: defaultLocation
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(mapCenter, 15f)
     }
 
-    LaunchedEffect(currentLocation) {
-        currentLocation?.let {
-            cameraPositionState.animate(
-                CameraUpdateFactory.newLatLngZoom(it, 15f)
-            )
+    LaunchedEffect(currentDeviceLocation.value) {
+        currentDeviceLocation.value?.let {
+            if (cameraPositionState.position.target != it) {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngZoom(it, 15f)
+                )
+            }
         }
     }
 
@@ -138,13 +144,20 @@ fun MapScreen(userViewModel: UserViewModel) {
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState
         ) {
-            currentLocation?.let { location ->
+            currentDeviceLocation.value?.let { location ->
                 Circle(
                     center = location,
                     radius = 50.0,
                     fillColor = Color.Blue.copy(alpha = 0.3f),
                     strokeColor = Color.Blue,
                     strokeWidth = 2f
+                )
+            }
+            locations.forEach { locationData ->
+                Marker(
+                    state = rememberMarkerState(position = LatLng(locationData.latitude, locationData.longitude)),
+                    title = locationData.name,
+                    snippet = locationData.description
                 )
             }
         }
