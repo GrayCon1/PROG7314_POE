@@ -59,21 +59,22 @@ import android.widget.Toast
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen(
-        rememberNavController()
-    )
+//    LoginScreen(
+//        rememberNavController()
+//    )
 }
 
 @Composable
 fun LoginScreen(
-    navController: NavController
+    navController: NavController,
+    userViewModel: UserViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf("") }
 
-    val userViewModel: UserViewModel = viewModel()
+    // Remove this line: val userViewModel: UserViewModel = viewModel()
     val currentUser by userViewModel.currentUser.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
     val errorMessage by userViewModel.errorMessage.collectAsState()
@@ -84,7 +85,7 @@ fun LoginScreen(
     LaunchedEffect(loginSuccess) {
         if (loginSuccess && currentUser != null) {
             Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-            navController.navigate("navigation_screen") { // Change to your navigation screen route
+            navController.navigate("home") { // Navigate to home instead of navigation_screen
                 popUpTo("login") { inclusive = true }
             }
         }
@@ -98,192 +99,188 @@ fun LoginScreen(
         }
     }
 
-    Box(
+    // Remove the background Box since it's now handled in MainActivity
+    Card(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFE8F4F8)), // grey background
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .padding(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Card(
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-                .align(Alignment.Center),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                .padding(32.dp)
+                .fillMaxSize()
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = "Welcome to",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2C3E50)
+            )
+            Text(
+                text = "GeoQuest",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2C3E50)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Validation Error Message
+            if (validationError.isNotEmpty()) {
+                Text(
+                    text = validationError,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    email = it
+                    validationError = ""
+                },
+                label = { Text("Enter your email", color = Color.Gray) },
                 modifier = Modifier
-                    .padding(32.dp)
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
+                )
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    validationError = ""
+                },
+                label = { Text("Enter your password", color = Color.Gray) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
+                ),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(Icons.Default.Visibility, contentDescription = "Toggle password")
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-                Text(
-                    text = "Welcome to",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2C3E50)
-                )
-                Text(
-                    text = "GeoQuest",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2C3E50)
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Validation Error Message
-                if (validationError.isNotEmpty()) {
-                    Text(
-                        text = validationError,
-                        color = Color.Red,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                TextButton(onClick = { /* Handle forgot password */ }) {
+                    Text("Forgot Password?", color = Color(0xFF757575))
                 }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    // Validation
+                    when {
+                        email.isBlank() -> {
+                            validationError = "Please enter your email"
+                        }
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        validationError = ""
-                    },
-                    label = { Text("Enter your email", color = Color.Gray) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4A90E2),
-                        unfocusedBorderColor = Color(0xFF4A90E2),
-                        cursorColor = Color(0xFF4A90E2)
-                    )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                        validationError = ""
-                    },
-                    label = { Text("Enter your password", color = Color.Gray) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4A90E2),
-                        unfocusedBorderColor = Color(0xFF4A90E2),
-                        cursorColor = Color(0xFF4A90E2)
-                    ),
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(Icons.Default.Visibility, contentDescription = "Toggle password")
+                        password.isBlank() -> {
+                            validationError = "Please enter your password"
+                        }
+
+                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                            validationError = "Please enter a valid email address"
+                        }
+
+                        else -> {
+                            // All validation passed, attempt login
+                            userViewModel.loginUser(email.trim().lowercase(), password)
                         }
                     }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text("Login", color = Color.White, fontSize = 18.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = DividerDefaults.Thickness,
+                    color = Color(0xFFB0B0B0)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { /* Handle forgot password */ }) {
-                        Text("Forgot Password?", color = Color(0xFF757575))
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        // Validation
-                        when {
-                            email.isBlank() -> {
-                                validationError = "Please enter your email"
-                            }
-                            password.isBlank() -> {
-                                validationError = "Please enter your password"
-                            }
-                            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                                validationError = "Please enter a valid email address"
-                            }
-                            else -> {
-                                // All validation passed, attempt login
-                                userViewModel.loginUser(email.trim().lowercase(), password)
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                Text(
+                    "  Or Login with  ",
+                    color = Color(0xFF757575),
+                    fontSize = 16.sp
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = DividerDefaults.Thickness,
+                    color = Color(0xFFB0B0B0)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = { /* Handle Google Sign-In */ },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
-                    enabled = !isLoading
+                    border = BorderStroke(2.dp, Color(0xFF64B5F6)),
+                    modifier = Modifier
+                        .size(64.dp)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text("Login", color = Color.White, fontSize = 18.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = DividerDefaults.Thickness,
-                        color = Color(0xFFB0B0B0)
-                    )
-                    Text(
-                        "  Or Login with  ",
-                        color = Color(0xFF757575),
-                        fontSize = 16.sp
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = DividerDefaults.Thickness,
-                        color = Color(0xFFB0B0B0)
+                    Icon(
+                        painterResource(id = R.drawable.google_logo),
+                        contentDescription = "Google Sign-In",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Don't have an account? ", color = Color(0xFF212121))
+                TextButton(
+                    onClick = { navController.navigate("register") },
+                    contentPadding = PaddingValues(0.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = { /* Handle Google Sign-In */ },
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(2.dp, Color(0xFF64B5F6)),
-                        modifier = Modifier
-                            .size(64.dp)
-                    ) {
-                        Icon(
-                            painterResource(id = R.drawable.google_logo),
-                            contentDescription = "Google Sign-In",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Don't have an account? ", color = Color(0xFF212121))
-                    TextButton(
-                        onClick = { navController.navigate("register") },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text("Register Now", color = Color(0xFF26C6DA))
-                    }
+                    Text("Register Now", color = Color(0xFF26C6DA))
                 }
             }
         }

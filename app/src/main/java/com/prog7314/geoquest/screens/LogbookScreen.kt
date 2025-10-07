@@ -21,9 +21,7 @@ import java.util.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ArrowBack
-
-
-
+import com.prog7314.geoquest.data.model.UserViewModel
 
 
 data class LogbookEntry(
@@ -33,15 +31,17 @@ data class LogbookEntry(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0
 )
+
 @Preview(showBackground = true)
 @Composable
 fun LogbookScreenPreview() {
-    LogbookScreen(rememberNavController())
+//    LogbookScreen(rememberNavController())
 }
 
 @Composable
 fun LogbookScreen(
-    navController: NavController
+    navController: NavController,
+    userViewModel: UserViewModel
 ) {
     val entries = remember {
         // Sample data - replace with actual data from your repository

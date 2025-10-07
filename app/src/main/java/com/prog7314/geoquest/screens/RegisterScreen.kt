@@ -63,12 +63,14 @@ import android.widget.Toast
 @Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview() {
-    RegisterScreen(rememberNavController())
+//    RegisterScreen(rememberNavController())
 }
 
 @Composable
-fun RegisterScreen(navController: NavController) {
-
+fun RegisterScreen(
+    navController: NavController,
+    userViewModel: UserViewModel
+) {
     var fullName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -76,7 +78,7 @@ fun RegisterScreen(navController: NavController) {
     var confirmPassword by remember { mutableStateOf("") }
     var validationError by remember { mutableStateOf("") }
 
-    val userViewModel: UserViewModel = viewModel()
+    // Remove this line: val userViewModel: UserViewModel = viewModel()
     val currentUser by userViewModel.currentUser.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
     val errorMessage by userViewModel.errorMessage.collectAsState()
@@ -86,7 +88,7 @@ fun RegisterScreen(navController: NavController) {
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-            navController.navigate("navigation_screen") {
+            navController.navigate("home") { // Navigate to home instead of navigation_screen
                 popUpTo("register") { inclusive = true }
             }
         }
@@ -100,254 +102,255 @@ fun RegisterScreen(navController: NavController) {
         }
     }
 
-    Box(
+    // Remove the background Box since it's now handled in MainActivity
+    Card(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFE8F4F8))
+            .fillMaxWidth()
+            .padding(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Card(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
-                .align(Alignment.Center),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
+            // Title
+            Text(
+                text = "Register to get Exploring",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2C3E50),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+
+            // Validation Error Message
+            if (validationError.isNotEmpty()) {
+                Text(
+                    text = validationError,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            // Full Name Field
+            OutlinedTextField(
+                value = fullName,
+                onValueChange = {
+                    fullName = it
+                    validationError = ""
+                },
+                label = { Text("Name & Surname", color = Color.Gray) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Title
-                Text(
-                    text = "Register to get Exploring",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2C3E50),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 32.dp)
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
                 )
+            )
 
-                // Validation Error Message
-                if (validationError.isNotEmpty()) {
-                    Text(
-                        text = validationError,
-                        color = Color.Red,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                }
-
-                // Full Name Field
-                OutlinedTextField(
-                    value = fullName,
-                    onValueChange = {
-                        fullName = it
-                        validationError = ""
-                    },
-                    label = { Text("Name & Surname", color = Color.Gray) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4A90E2),
-                        unfocusedBorderColor = Color(0xFF4A90E2),
-                        cursorColor = Color(0xFF4A90E2)
-                    )
+            // Username Field
+            OutlinedTextField(
+                value = username,
+                onValueChange = {
+                    username = it
+                    validationError = ""
+                },
+                label = { Text("Username", color = Color.Gray) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
                 )
+            )
 
-                // Username Field
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = {
-                        username = it
-                        validationError = ""
-                    },
-                    label = { Text("Username", color = Color.Gray) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4A90E2),
-                        unfocusedBorderColor = Color(0xFF4A90E2),
-                        cursorColor = Color(0xFF4A90E2)
-                    )
+            // Email Field
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    email = it
+                    validationError = ""
+                },
+                label = { Text("Email", color = Color.Gray) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
                 )
+            )
 
-                // Email Field
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        validationError = ""
-                    },
-                    label = { Text("Email", color = Color.Gray) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4A90E2),
-                        unfocusedBorderColor = Color(0xFF4A90E2),
-                        cursorColor = Color(0xFF4A90E2)
-                    )
+            // Password Field
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    validationError = ""
+                },
+                label = { Text("Password", color = Color.Gray) },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
                 )
+            )
 
-                // Password Field
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                        validationError = ""
-                    },
-                    label = { Text("Password", color = Color.Gray) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4A90E2),
-                        unfocusedBorderColor = Color(0xFF4A90E2),
-                        cursorColor = Color(0xFF4A90E2)
-                    )
+            // Confirm Password Field
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = {
+                    confirmPassword = it
+                    validationError = ""
+                },
+                label = { Text("Confirm password", color = Color.Gray) },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = Color(0xFF4A90E2),
+                    cursorColor = Color(0xFF4A90E2)
                 )
+            )
 
-                // Confirm Password Field
-                OutlinedTextField(
-                    value = confirmPassword,
-                    onValueChange = {
-                        confirmPassword = it
-                        validationError = ""
-                    },
-                    label = { Text("Confirm password", color = Color.Gray) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 32.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF4A90E2),
-                        unfocusedBorderColor = Color(0xFF4A90E2),
-                        cursorColor = Color(0xFF4A90E2)
-                    )
-                )
-
-                // Register Button
-                Button(
-                    onClick = {
-                        // Validation
-                        when {
-                            fullName.isBlank() -> {
-                                validationError = "Please enter your full name"
-                            }
-                            username.isBlank() -> {
-                                validationError = "Please enter a username"
-                            }
-                            email.isBlank() -> {
-                                validationError = "Please enter your email"
-                            }
-                            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                                validationError = "Please enter a valid email address"
-                            }
-                            password.isBlank() -> {
-                                validationError = "Please enter a password"
-                            }
-                            password.length < 6 -> {
-                                validationError = "Password must be at least 6 characters"
-                            }
-                            password != confirmPassword -> {
-                                validationError = "Passwords do not match"
-                            }
-                            else -> {
-                                // All validation passed, register user
-                                val userData = UserData(
-                                    name = fullName.trim(),
-                                    username = username.trim(),
-                                    email = email.trim().lowercase(),
-                                    password = password
-                                )
-                                userViewModel.registerUser(userData)
-                            }
+            // Register Button
+            Button(
+                onClick = {
+                    // Validation
+                    when {
+                        fullName.isBlank() -> {
+                            validationError = "Please enter your full name"
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2C3E50)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Register",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+
+                        username.isBlank() -> {
+                            validationError = "Please enter a username"
+                        }
+
+                        email.isBlank() -> {
+                            validationError = "Please enter your email"
+                        }
+
+                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                            validationError = "Please enter a valid email address"
+                        }
+
+                        password.isBlank() -> {
+                            validationError = "Please enter a password"
+                        }
+
+                        password.length < 6 -> {
+                            validationError = "Password must be at least 6 characters"
+                        }
+
+                        password != confirmPassword -> {
+                            validationError = "Passwords do not match"
+                        }
+
+                        else -> {
+                            // All validation passed, register user
+                            val userData = UserData(
+                                name = fullName.trim(),
+                                username = username.trim(),
+                                email = email.trim().lowercase(),
+                                password = password
+                            )
+                            userViewModel.registerUser(userData)
+                        }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(25.dp))
-
-                HorizontalDivider()
-
-                Spacer(modifier = Modifier.height(25.dp))
-
-                Text(
-                    "Or Register with",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Light,
-                    fontSize = 3.em
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                IconButton(
-                    onClick = { /* handle google login */ },
-                    shape = IconButtonDefaults.filledShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            borderStroke(MaterialTheme.colorScheme.primary, 1.dp),
-                            shape = IconButtonDefaults.filledShape
-                        )
-                ) {
-                    Icon(
-                        painterResource(id = R.drawable.google_logo),
-                        contentDescription = "Google Logo",
-                        tint = null
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2C3E50)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Register",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(25.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+            HorizontalDivider()
+
+            Spacer(modifier = Modifier.height(25.dp))
+
+            Text(
+                "Or Register with",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Light,
+                fontSize = 3.em
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            IconButton(
+                onClick = { /* handle google login */ },
+                shape = IconButtonDefaults.filledShape,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        borderStroke(MaterialTheme.colorScheme.primary, 1.dp),
+                        shape = IconButtonDefaults.filledShape
+                    )
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.google_logo),
+                    contentDescription = "Google Logo",
+                    tint = null
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Already have an account? ", color = Color(0xFF212121))
+                TextButton(
+                    onClick = { navController.navigate("login") },
+                    contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("Already have an account? ", color = Color(0xFF212121))
-                    TextButton(
-                        onClick = { navController.navigate("login") },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text("Login Now", color = Color(0xFF26C6DA))
-                    }
+                    Text("Login Now", color = Color(0xFF26C6DA))
                 }
             }
         }

@@ -60,22 +60,23 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.prog7314.geoquest.data.model.UserViewModel
 import com.prog7314.geoquest.ui.theme.PROG7314Theme
 import kotlin.text.get
 
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    PROG7314Theme { HomeScreen(rememberNavController()) }
+//    PROG7314Theme { HomeScreen(rememberNavController()) }
 }
 
 @Composable
-fun HomeScreen(navController: NavController) {
-    MapScreen()
+fun HomeScreen(navController: NavController, userViewModel: UserViewModel) {
+    MapScreen(userViewModel)
 }
 
 @Composable
-fun MapScreen() {
+fun MapScreen(userViewModel: UserViewModel) {
     val context = LocalContext.current
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var hasLocationPermission by remember { mutableStateOf(false) }

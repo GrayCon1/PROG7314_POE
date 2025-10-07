@@ -52,32 +52,19 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.prog7314.geoquest.data.model.UserViewModel
 import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.compareTo
 import kotlin.text.format
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsScreenPreview() {
-    SettingsScreen(rememberNavController())
-}
+import com.prog7314.geoquest.data.data.UserData
 
 @Composable
-fun SettingsScreen(navController: NavController) {
-    val userViewModel: UserViewModel = viewModel()
+fun SettingsScreen(navController: NavController, userViewModel: UserViewModel) {
     val currentUser by userViewModel.currentUser.collectAsState()
     val isLoading by userViewModel.isLoading.collectAsState()
     val errorMessage by userViewModel.errorMessage.collectAsState()
-
-    var newPassword by remember { mutableStateOf("") }
-    var currentPassword by remember { mutableStateOf("") }
-    var selectedLanguage by remember { mutableStateOf("English") }
-    var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
-    var validationError by remember { mutableStateOf("") }
-
-    val languages = listOf("English", "Spanish", "French", "German", "Portuguese")
     val context = LocalContext.current
 
     // Check if user is logged in, if not redirect to login
@@ -95,8 +82,6 @@ fun SettingsScreen(navController: NavController) {
         errorMessage?.let { message ->
             if (message == "Profile updated successfully") {
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                newPassword = ""
-                currentPassword = ""
             } else {
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
@@ -104,7 +89,6 @@ fun SettingsScreen(navController: NavController) {
         }
     }
 
-    // Create local variable for non-null user
     val user = currentUser
     if (user == null) {
         Box(
@@ -121,6 +105,29 @@ fun SettingsScreen(navController: NavController) {
         }
         return
     }
+
+    SettingsContent(
+        user = user,
+        isLoading = isLoading,
+        onUpdateUser = { userId, name, email, newPassword, currentPassword ->
+            userViewModel.updateUser(userId, name, email, newPassword, currentPassword)
+        }
+    )
+}
+
+@Composable
+fun SettingsContent(
+    user: UserData,
+    isLoading: Boolean,
+    onUpdateUser: (String, String, String, String, String) -> Unit
+) {
+    var newPassword by remember { mutableStateOf("") }
+    var currentPassword by remember { mutableStateOf("") }
+    var selectedLanguage by remember { mutableStateOf("English") }
+    var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
+    var validationError by remember { mutableStateOf("") }
+
+    val languages = listOf("English", "Spanish", "French", "German", "Portuguese")
 
     // Format date for display
     val formattedDate = user.dateJoined.let { timestamp ->
@@ -380,19 +387,21 @@ fun SettingsScreen(navController: NavController) {
                             currentPassword.isBlank() -> {
                                 validationError = "Current password is required to save changes"
                             }
+
                             newPassword.isNotBlank() && newPassword.length < 6 -> {
                                 validationError = "New password must be at least 6 characters"
                             }
+
                             else -> {
                                 if (newPassword.isBlank()) {
                                     validationError = "No changes were made"
                                 } else {
-                                    userViewModel.updateUser(
-                                        userId = user.id,
-                                        name = user.name,
-                                        email = user.email,
-                                        newPassword = newPassword,
-                                        currentPassword = currentPassword
+                                    onUpdateUser(
+                                        user.id,
+                                        user.name,
+                                        user.email,
+                                        newPassword,
+                                        currentPassword
                                     )
                                 }
                             }
@@ -426,5 +435,27 @@ fun SettingsScreen(navController: NavController) {
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenPreview() {
+    val mockUser = UserData(
+        id = "preview-id",
+        name = "John Doe",
+        username = "johndoe",
+        email = "john.doe@example.com",
+        password = "password123",
+        dateJoined = System.currentTimeMillis()
+    )
+
+    SettingsContent(
+        user = mockUser,
+        isLoading = false,
+        onUpdateUser = { _, _, _, _, _ ->
+            // Mock function for preview
+        }
+    )
+}
+
 
 
